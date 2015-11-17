@@ -33,6 +33,8 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             double speedModule = Math.Sqrt(self.SpeedX * self.SpeedX + self.SpeedY * self.SpeedY);
             if (Math.Abs(speedModule) < .05)
                 number++;
+            else
+                number = 0;
             if (number > maxNumber)
             {
                 backNumber = 0;
@@ -62,7 +64,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
         private bool IsThrow(Car self, World world, Game game, Move move)
         {
-            int maxShootDistance = 10;
+            int maxShootDistance = 1000;
             if (self.ProjectileCount <= 0)
             {
                 return false;
@@ -144,7 +146,10 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 case TileType.RightBottomCorner:
                 case TileType.RightTopCorner:
                     if (speedModule > MaxSpeed)
+                    {
+                        move.EnginePower = .8d;
                         return true;
+                    }
                     break;
                 default:
                     return false;
@@ -158,7 +163,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             double nextWaypointY = (self.NextWaypointY + 0.5D) * game.TrackTileSize;
             double speedModule = Math.Sqrt(self.SpeedX * self.SpeedX + self.SpeedY * self.SpeedY);
             
-            double max = .35D;
+            double max = .32D;
             double delta = speedModule / MaxSpeed;
             double cornerTileOffset = max * delta * game.TrackTileSize;
 
