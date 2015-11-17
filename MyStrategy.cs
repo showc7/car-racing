@@ -5,6 +5,8 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 {
     public sealed class MyStrategy : IStrategy
     {
+        private const double MaxSpeed = 18;
+
         private int number = -500;
         private int maxNumber = 100;
         private double oldAngle;
@@ -12,7 +14,6 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         private int maxBackNumber = 100;
         private TileType oldTileType;
         private TileType veryOldTileType;
-        private double maxSpeed = 15;
 
         public void Move(Car self, World world, Game game, Move move)
         {
@@ -43,6 +44,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             if (Math.Abs(nextWaypointX - self.X) < 1600 && Math.Abs(nextWaypointY - self.Y) < 1600)
             {
                 angleToWaypoint = AngelToWayPoint(self, world, game, move);
+                move.IsBrake = IsUseBreak(self, world, game, move);
             }
             move.WheelTurn = angleToWaypoint * 32.0D / Math.PI;
             Console.WriteLine(String.Format("{0} - {1}", self.SpeedX, self.SpeedY));
@@ -111,14 +113,43 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             int currentTileX = (int)(self.X / game.TrackTileSize);
             int currentTileY = (int)(self.Y / game.TrackTileSize);
 
+            switch (world.TilesXY[self.NextWaypointX][self.NextWaypointY])
+            {
+                case TileType.LeftBottomCorner:
+                case TileType.LeftTopCorner:
+                case TileType.RightBottomCorner:
+                case TileType.RightTopCorner:
+                    return false;
+            }
+
             switch (world.TilesXY[currentTileX][currentTileY])
             {
                 case TileType.Crossroads:
                 case TileType.Horizontal:
+                case TileType.Vertical:
                     return true;
                 default:
                     return false;
             }
+        }
+
+        private bool IsUseBreak(Car self, World world, Game game, Move move)
+        {
+            double speedModule = Math.Sqrt(self.SpeedX * self.SpeedX + self.SpeedY * self.SpeedY);
+
+            switch (world.TilesXY[self.NextWaypointX][self.NextWaypointY])
+            {
+                case TileType.LeftBottomCorner:
+                case TileType.LeftTopCorner:
+                case TileType.RightBottomCorner:
+                case TileType.RightTopCorner:
+                    if (speedModule > MaxSpeed)
+                        return true;
+                    break;
+                default:
+                    return false;
+            }
+            return false;
         }
 
         private double AngelToWayPoint(Car self, World world, Game game, Move move)
@@ -126,11 +157,9 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             double nextWaypointX = (self.NextWaypointX + 0.5D) * game.TrackTileSize;
             double nextWaypointY = (self.NextWaypointY + 0.5D) * game.TrackTileSize;
             double speedModule = Math.Sqrt(self.SpeedX * self.SpeedX + self.SpeedY * self.SpeedY);
-
-            var maxSpeed = 18;
-
+            
             double max = .35D;
-            double delta = speedModule / maxSpeed;
+            double delta = speedModule / MaxSpeed;
             double cornerTileOffset = max * delta * game.TrackTileSize;
 
             switch (world.TilesXY[self.NextWaypointX][self.NextWaypointY])
@@ -138,26 +167,18 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 case TileType.LeftTopCorner:
                     nextWaypointX += cornerTileOffset;
                     nextWaypointY += cornerTileOffset;
-                    if (speedModule > maxSpeed)
-                        move.IsBrake = true;
                     break;
                 case TileType.RightTopCorner:
                     nextWaypointX -= cornerTileOffset;
                     nextWaypointY += cornerTileOffset;
-                    if (speedModule > maxSpeed)
-                        move.IsBrake = true;
                     break;
                 case TileType.LeftBottomCorner:
                     nextWaypointX += cornerTileOffset;
                     nextWaypointY -= cornerTileOffset;
-                    if (speedModule > maxSpeed)
-                        move.IsBrake = true;
                     break;
                 case TileType.RightBottomCorner:
                     nextWaypointX -= cornerTileOffset;
                     nextWaypointY -= cornerTileOffset;
-                    if (speedModule > maxSpeed)
-                        move.IsBrake = true;
                     break;
             }
 
